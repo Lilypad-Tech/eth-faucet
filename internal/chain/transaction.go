@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/chainflag/eth-faucet/internal/chain/token"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -18,17 +19,20 @@ import (
 type TxBuilder interface {
 	Sender() common.Address
 	Transfer(ctx context.Context, to string, value *big.Int) (common.Hash, error)
+	TransferTokens(ctx context.Context, to string, value *big.Int) (common.Hash, error)
 }
 
 type TxBuild struct {
-	client      bind.ContractTransactor
-	privateKey  *ecdsa.PrivateKey
-	signer      types.Signer
-	fromAddress common.Address
-	nonce       uint64
+	client       bind.ContractTransactor
+	privateKey   *ecdsa.PrivateKey
+	transactOpts *bind.TransactOpts
+	signer       types.Signer
+	fromAddress  common.Address
+	tokenAddress common.Address
+	nonce        uint64
 }
 
-func NewTxBuilder(provider string, privateKey *ecdsa.PrivateKey, chainID *big.Int) (TxBuilder, error) {
+func NewTxBuilder(provider string, privateKey *ecdsa.PrivateKey, chainID *big.Int, tokenAddress common.Address) (TxBuilder, error) {
 	client, err := ethclient.Dial(provider)
 	if err != nil {
 		return nil, err
@@ -41,11 +45,18 @@ func NewTxBuilder(provider string, privateKey *ecdsa.PrivateKey, chainID *big.In
 		}
 	}
 
+	transactOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	if err != nil {
+		return nil, err
+	}
+
 	txBuilder := &TxBuild{
-		client:      client,
-		privateKey:  privateKey,
-		signer:      types.NewEIP155Signer(chainID),
-		fromAddress: crypto.PubkeyToAddress(privateKey.PublicKey),
+		client:       client,
+		privateKey:   privateKey,
+		signer:       types.NewEIP155Signer(chainID),
+		transactOpts: transactOpts,
+		fromAddress:  crypto.PubkeyToAddress(privateKey.PublicKey),
+		tokenAddress: tokenAddress,
 	}
 	txBuilder.refreshNonce(context.Background())
 
@@ -86,6 +97,20 @@ func (b *TxBuild) Transfer(ctx context.Context, to string, value *big.Int) (comm
 	}
 
 	return signedTx.Hash(), nil
+}
+
+func (b *TxBuild) TransferTokens(ctx context.Context, to string, value *big.Int) (common.Hash, error) {
+	connectedToken, err := token.NewTokenTransactor(common.HexToAddress(to), b.client)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	tx, err := connectedToken.Transfer(b.transactOpts, common.HexToAddress(to), value)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	return tx.Hash(), nil
 }
 
 func (b *TxBuild) getAndIncrementNonce() uint64 {

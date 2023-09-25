@@ -62,11 +62,19 @@ func (s *Server) handleClaim() http.HandlerFunc {
 			return
 		}
 
+		tokenTxHash, err := s.TransferTokens(ctx, address, chain.EtherToWei(int64(s.cfg.tokenPayout)))
+		if err != nil {
+			log.WithError(err).Error("Failed to send transaction")
+			renderJSON(w, claimResponse{Message: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+
 		log.WithFields(log.Fields{
-			"txHash":  txHash,
-			"address": address,
+			"txHash":      txHash,
+			"tokenTxHash": tokenTxHash,
+			"address":     address,
 		}).Info("Transaction sent successfully")
-		resp := claimResponse{Message: fmt.Sprintf("Txhash: %s", txHash)}
+		resp := claimResponse{Message: fmt.Sprintf("Txhash: %s, TokenTxhash: %s", txHash, tokenTxHash)}
 		renderJSON(w, resp, http.StatusOK)
 	}
 }
