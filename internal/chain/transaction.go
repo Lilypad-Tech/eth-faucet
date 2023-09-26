@@ -105,6 +105,7 @@ func (b *TxBuild) TransferTokens(ctx context.Context, to string, value *big.Int)
 		return common.Hash{}, err
 	}
 
+	b.getAndIncrementNonce()
 	tx, err := connectedToken.Transfer(b.transactOpts, common.HexToAddress(to), value)
 	if err != nil {
 		return common.Hash{}, err
