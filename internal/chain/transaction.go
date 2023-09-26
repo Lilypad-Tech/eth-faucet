@@ -100,7 +100,7 @@ func (b *TxBuild) Transfer(ctx context.Context, to string, value *big.Int) (comm
 }
 
 func (b *TxBuild) TransferTokens(ctx context.Context, to string, value *big.Int) (common.Hash, error) {
-	connectedToken, err := token.NewTokenTransactor(common.HexToAddress(to), b.client)
+	connectedToken, err := token.NewTokenTransactor(b.tokenAddress, b.client)
 	if err != nil {
 		return common.Hash{}, err
 	}

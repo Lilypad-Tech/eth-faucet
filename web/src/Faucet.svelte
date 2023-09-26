@@ -127,22 +127,12 @@
               <span class="icon">
                 <i class="fa fa-bath" />
               </span>
-              <span><b>{faucetInfo.symbol} Faucet</b></span>
+              <span><b>Lilypad Faucet</b></span>
             </a>
           </div>
           <div id="navbarMenu" class="navbar-menu">
             <div class="navbar-end">
-              <span class="navbar-item">
-                <a
-                  class="button is-white is-outlined"
-                  href="https://github.com/chainflag/eth-faucet"
-                >
-                  <span class="icon">
-                    <i class="fa fa-github" />
-                  </span>
-                  <span>View Source</span>
-                </a>
-              </span>
+              
             </div>
           </div>
         </div>
@@ -152,9 +142,12 @@
     <div class="hero-body">
       <div class="container has-text-centered">
         <div class="column is-6 is-offset-3">
+          <div>
+            <img src="/logo.png" alt="logo" />
+          </div>
           <h1 class="title">
-            Receive {faucetInfo.payout}
-            {faucetInfo.symbol} per request
+            Receive 100 eth and <br />100 tokens
+            per request
           </h1>
           <h2 class="subtitle">
             Serving from {faucetInfo.account}
@@ -167,7 +160,7 @@
                   bind:value={input}
                   class="input is-rounded"
                   type="text"
-                  placeholder="Enter your address or ENS name"
+                  placeholder="Enter your address"
                 />
               </p>
               <p class="control">
@@ -180,6 +173,9 @@
               </p>
             </div>
           </div>
+          <div>
+            <img src="/feature.png" alt="feature" style="border: 1px solid #fff;" />
+          </div>
         </div>
       </div>
     </div>
@@ -188,9 +184,7 @@
 
 <style>
   .hero.is-info {
-    background:
-      linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-      url('/background.jpg') no-repeat center center fixed;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
