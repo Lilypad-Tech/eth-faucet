@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 	"strconv"
 	"time"
@@ -63,7 +62,7 @@ func (s *Server) handleClaim() http.HandlerFunc {
 			return
 		}
 
-		tokenTxHash, err := s.TransferTokens(ctx, address, big.NewInt(int64(s.cfg.tokenPayout)))
+		tokenTxHash, err := s.TransferTokens(ctx, address, chain.EtherToWei(int64(s.cfg.tokenPayout)))
 		if err != nil {
 			log.WithError(err).Error("Failed to send transaction")
 			renderJSON(w, claimResponse{Message: err.Error()}, http.StatusInternalServerError)
