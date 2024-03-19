@@ -21,6 +21,7 @@ The faucet is a web application with the goal of distributing small amounts of E
 
 * Go (1.17 or later)
 * Node.js
+* Yarn installed (hint - `npm install -g yarn`
 
 ### Installation
 
