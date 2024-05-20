@@ -1,0 +1,66 @@
+name: Deploy Devnet faucet
+
+on: workflow_dispatch
+
+jobs:
+  faucet-build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          context: app
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
+
+      - name: faucet build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+        run: |
+          docker build \
+            -t $ECR_REPOSITORY \
+            --build-arg="expose_via=cloudflare" \
+            --build-arg="cloudflare_token=${CLOUDFLARE_TOKEN}"\
+            --build-arg="doppler_config=devnet" \
+            .
+          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: faucet deploy to EC2 instance
+        uses: appleboy/ssh-action@master
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          envs: ECR_REGISTRY, ECR_REPOSITORY, DOPPLER_TOKEN
+          script_stop: true
+          script: |
+            docker stop faucet || true
+            docker rm faucet || true
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+            docker system prune -af
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
+            docker run \
+              -d \
+              --restart always \
+              --name faucet \
+              -e DOPPLER_TOKEN=$DOPPLER_TOKEN \
+              $ECR_REGISTRY/$ECR_REPOSITORY:latest
