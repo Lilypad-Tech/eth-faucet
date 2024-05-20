@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+OS_ARCH=$(uname -m | awk '{if ($0 ~ /arm64|aarch64/) print "arm64"; else if ($0 ~ /x86_64|amd64/) print "amd64"; else print "unsupported_arch"}')
+
+function faucet-docker-build(){
+  docker build \
+    -t faucet \
+    --build-arg arch=${OS_ARCH} \
+    .
+}
+
+function faucet-docker-run() {
+  docker run \
+    --rm \
+    --name faucet \
+    -p 8082:8080 \
+    -e DOPPLER_TOKEN="$(doppler configs tokens create -p faucet -c dev docker --max-age 1m --plain)" \
+    faucet
+}
+
+eval "$@"
