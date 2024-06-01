@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strconv"
 	"time"
@@ -55,13 +56,16 @@ func (s *Server) handleClaim() http.HandlerFunc {
 		address, _ := readAddress(r)
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
-		txHash, err := s.Transfer(ctx, address, chain.EtherToWei(int64(s.cfg.payout)))
+		bigHundred := big.NewInt(1000)
+		payout := chain.EtherToWei(int64(s.cfg.payout))
+		payout.Div(payout, bigHundred)
+		txHash, err := s.Transfer(ctx, address, payout)
 		if err != nil {
 			log.WithError(err).Error("Failed to send transaction")
 			renderJSON(w, claimResponse{Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
-
+		time.Sleep(2 * time.Second)
 		tokenTxHash, err := s.TransferTokens(ctx, address, chain.EtherToWei(int64(s.cfg.tokenPayout)))
 		if err != nil {
 			log.WithError(err).Error("Failed to send transaction")
