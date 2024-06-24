@@ -15,7 +15,7 @@ function faucet-docker-run() {
     --rm \
     --name faucet \
     -p 8082:8080 \
-    -e DOPPLER_TOKEN="$(doppler configs tokens create -p faucet -c dev docker --max-age 1m --plain)" \
+    -e DOPPLER_TOKEN="$(doppler configs tokens create -p faucet -c testnet docker --max-age 1m --plain)" \
     faucet
 }
 

@@ -146,7 +146,9 @@
             <img src="/logo.png" alt="logo" />
           </div>
           <h1 class="title">
-            Receive 0.001 eth and <br />20 tokens
+            <!-- Receive 0.001 eth and 
+            <br /> -->
+            20 tokens
             per request
           </h1>
           <h2 class="subtitle">
