@@ -68,7 +68,7 @@ func (b *TxBuild) Sender() common.Address {
 }
 
 func (b *TxBuild) Transfer(ctx context.Context, to string, value *big.Int) (common.Hash, error) {
-	gasLimit := uint64(21000)
+	gasLimit := uint64(50000)
 	gasPrice, err := b.client.SuggestGasPrice(ctx)
 	if err != nil {
 		return common.Hash{}, err
