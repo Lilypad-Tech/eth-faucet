@@ -28,11 +28,11 @@ RUN echo "#!/bin/bash" >> run
 FROM base AS expose-cloudflare
 RUN curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${arch}.deb
 RUN dpkg -i cloudflared.deb
-RUN echo "doppler run --command \"cloudflared tunnel run & eth-faucet --faucet.amount=1 --faucet.tokenamount=20 --faucet.minutes=1\"" >> run
+RUN echo "doppler run --command \"cloudflared tunnel run & eth-faucet --faucet.amount=1 --faucet.tokenamount=20 --faucet.minutes=0\"" >> run
 
 FROM base AS expose-local
 EXPOSE 8082
-RUN echo "doppler run -- eth-faucet --faucet.amount=1 --faucet.tokenamount=20 --faucet.minutes=1" >> run
+RUN echo "doppler run -- eth-faucet --faucet.amount=1 --faucet.tokenamount=20 --faucet.minutes=0" >> run
 
 FROM expose-$expose_via AS FINAL
 RUN chmod +x run
