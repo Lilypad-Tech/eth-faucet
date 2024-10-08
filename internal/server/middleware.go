@@ -93,6 +93,11 @@ func getClientIPFromRequest(proxyCount int, r *http.Request) string {
 			return strings.TrimSpace(xForwardedForParts[partIndex])
 		}
 	}
+	//get the client IP address from the request
+	remoteIP := r.Header.Get("X-Real-IP")
+	if remoteIP != "" {
+		return remoteIP
+	}
 
 	remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
