@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -62,6 +63,10 @@ func getClientIPFromRequest(w http.ResponseWriter, r *http.Request) string {
 	remoteIP := r.Header.Get("X-Real-IP")
 	if remoteIP != "" {
 		return remoteIP
+	}
+	remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		remoteIP = r.RemoteAddr
 	}
 	if remoteIP == "" {
 		errMsg := "The client address is missing"
