@@ -12,19 +12,17 @@ import (
 )
 
 type Limiter struct {
-	mutex      sync.Mutex
-	cache      *ttlcache.Cache
-	proxyCount int
-	ttl        time.Duration
+	mutex sync.Mutex
+	cache *ttlcache.Cache
+	ttl   time.Duration
 }
 
-func NewLimiter(proxyCount int, ttl time.Duration) *Limiter {
+func NewLimiter(ttl time.Duration) *Limiter {
 	cache := ttlcache.NewCache()
 	cache.SkipTTLExtensionOnHit(true)
 	return &Limiter{
-		cache:      cache,
-		proxyCount: proxyCount,
-		ttl:        ttl,
+		cache: cache,
+		ttl:   ttl,
 	}
 }
 
