@@ -64,6 +64,10 @@ func getClientIPFromRequest(w http.ResponseWriter, r *http.Request) string {
 	if remoteIP != "" {
 		return remoteIP
 	}
+	remoteIP = r.Header.Get("CF-Connecting-IP")
+	if remoteIP != "" {
+		return remoteIP
+	}
 	remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		remoteIP = r.RemoteAddr
