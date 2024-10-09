@@ -10,6 +10,7 @@ import (
 	"github.com/jellydator/ttlcache/v2"
 	"github.com/kataras/hcaptcha"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/negroni"
 )
 
 type Limiter struct {
@@ -44,10 +45,15 @@ func (l *Limiter) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Ha
 	}
 	l.cache.SetWithTTL(clintIP, true, l.ttl)
 	l.mutex.Unlock()
+
+	next.ServeHTTP(w, r)
+	if w.(negroni.ResponseWriter).Status() != http.StatusOK {
+		l.cache.Remove(clintIP)
+		return
+	}
 	log.WithFields(log.Fields{
 		"clientIP": clintIP,
 	}).Info("Maximum request limit has been reached")
-	next.ServeHTTP(w, r)
 }
 
 func (l *Limiter) limitByKey(w http.ResponseWriter, key string) bool {
