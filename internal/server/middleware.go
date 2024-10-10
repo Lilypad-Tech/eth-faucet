@@ -51,11 +51,10 @@ func (l *Limiter) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Ha
 
 	clintIP := getClientIPFromRequest(l.proxyCount, r)
 	l.mutex.Lock()
-	if l.limitByKey(w, address) || l.limitByKey(w, clintIP) {
+	if l.limitByKey(w, clintIP) {
 		l.mutex.Unlock()
 		return
 	}
-	l.cache.SetWithTTL(address, true, l.ttl)
 	l.cache.SetWithTTL(clintIP, true, l.ttl)
 	l.mutex.Unlock()
 
@@ -93,7 +92,10 @@ func getClientIPFromRequest(proxyCount int, r *http.Request) string {
 			return strings.TrimSpace(xForwardedForParts[partIndex])
 		}
 	}
-
+	remoteIP := r.Header.Get("CF-Connecting-IP")
+	if remoteIP != "" {
+		return remoteIP
+	}
 	remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		remoteIP = r.RemoteAddr
