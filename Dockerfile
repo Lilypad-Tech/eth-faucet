@@ -32,7 +32,7 @@ RUN echo "doppler run --command \"cloudflared tunnel run & eth-faucet --faucet.a
 
 FROM base AS expose-local
 EXPOSE 8082
-RUN echo "doppler run -- eth-faucet --faucet.amount=1 --faucet.tokenamount=20 --faucet.minutes=0" >> run
+RUN echo "doppler run -- eth-faucet --faucet.amount=1 --faucet.tokenamount=20 --faucet.minutes=1" >> run
 
 FROM expose-$expose_via AS FINAL
 RUN chmod +x run
