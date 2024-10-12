@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -33,40 +32,27 @@ func NewLimiter(proxyCount int, ttl time.Duration) *Limiter {
 }
 
 func (l *Limiter) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	address, err := readAddress(r)
-	if err != nil {
-		var mr *malformedRequest
-		if errors.As(err, &mr) {
-			renderJSON(w, claimResponse{Message: mr.message}, mr.status)
-		} else {
-			renderJSON(w, claimResponse{Message: http.StatusText(http.StatusInternalServerError)}, http.StatusInternalServerError)
-		}
-		return
-	}
-
 	if l.ttl <= 0 {
 		next.ServeHTTP(w, r)
 		return
 	}
 
-	clintIP := getClientIPFromRequest(l.proxyCount, r)
+	clientIP := getClientIPFromRequest(l.proxyCount, r)
 	l.mutex.Lock()
-	if l.limitByKey(w, clintIP) {
+	if l.limitByKey(w, clientIP) {
 		l.mutex.Unlock()
 		return
 	}
-	l.cache.SetWithTTL(clintIP, true, l.ttl)
+	l.cache.SetWithTTL(clientIP, true, l.ttl)
 	l.mutex.Unlock()
 
 	next.ServeHTTP(w, r)
 	if w.(negroni.ResponseWriter).Status() != http.StatusOK {
-		l.cache.Remove(address)
-		l.cache.Remove(clintIP)
+		l.cache.Remove(clientIP)
 		return
 	}
 	log.WithFields(log.Fields{
-		"address":  address,
-		"clientIP": clintIP,
+		"clientIP": clientIP,
 	}).Info("Maximum request limit has been reached")
 }
 
